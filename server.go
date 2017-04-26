@@ -1,38 +1,65 @@
 package main
 
+import (
+	"net"
+	"bufio"
+	"fmt"
+)
+
 type Client struct {
 	co *net.TCPConn
-	cc chan string
+	//cc chan string
 	cr *bufio.Reader
 	cw *bufio.Writer
 }
 
 func main() {
-	l, err := net.ListenTCP("TCP", ":8765")
+	a, _ := net.ResolveTCPAddr("TCP", ":8765")
+
+	l, _ := net.ListenTCP("TCP",a)
+
 	var cl []*Client
+
+	cc := make(chan string)		// Client channel
+	jc := make(chan *net.TCPConn)	// Join channel
+
+	go joinListen(l, jc)
+
 	for {
-		conn, err = l.AcceptTCP()
+		select {
+		case conn := <- jc:
+			c := Client{conn,
+				    bufio.NewReader(conn),
+				    bufio.NewWriter(conn)}
+			cl = append(cl, &c)
+			go clientListen(c, cc)
+		case str := <- cc:
+			for _, c := range cl {
+				c.cw.WriteString(str)
+				c.cw.Flush()
+			}
+		}
+	}
+}
+
+func joinListen(l *net.TCPListener, jc chan *net.TCPConn) {
+	for {
+		conn, err := l.AcceptTCP()
 		if err!=nil {
 			fmt.Println("Error accepting connection.")
 			continue
 		}
-		c := Client{conn,
-			make(chan string),
-			bufio.NewReader(conn),
-			bufio.NewWriter(conn)}
-		cl = append(cl, c)
-		go clientListen(c)
-
+		jc <- conn
 	}
 }
 
-func clientListen(c Client) {
+func clientListen(c Client, cc chan string) {
 	for {
 		str, err := c.cr.ReadString('\n')
 		if err!= nil {
 			fmt.Println("Error reading from client.")
-			break
+			continue
 		}
-		c.cc <- str
+		cc <- str
 	}
 }
