@@ -73,6 +73,7 @@ func main() {
 		case str := <-ic:
 			w.WriteString("1" + str)
 			w.Flush()
+			fmt.Println("?")
 		}
 	}
 }
