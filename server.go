@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 )
 
 type Client struct {
@@ -71,6 +72,7 @@ func main() {
 }
 
 func inputListen(ic chan string) {
+	fmt.Println("Reading console input.")
 	r := bufio.NewReader(os.Stdin)
 	for {
 		str, err := r.ReadString('\n')
@@ -78,6 +80,8 @@ func inputListen(ic chan string) {
 			fmt.Println("Error reading from console.")
 			continue
 		}
+		str = strings.TrimRight(str,"\n")
+		fmt.Println(str)
 		if str=="quit" {
 			fmt.Println("QUIT")
 			ic <- str
