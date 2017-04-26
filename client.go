@@ -1,29 +1,30 @@
 package main
 
 import (
-	"net"
 	"bufio"
 	"fmt"
+	"net"
 	"os"
 )
 
 func main() {
 	run := true
 
-	a, err := net.ResolveTCPAddr("TCP", ":8765")
+	a, err := net.ResolveTCPAddr("tcp", "206.21.94.53:8765")
 	if err != nil {
+		fmt.Print(err, "\t")
 		fmt.Println("Error resolving address.")
 		run = false
 	}
 
-	c, err := net.DialTCP("TCP",nil,a)
+	c, err := net.DialTCP("tcp", nil, a)
 	if err != nil {
 		fmt.Println("Error connecting.")
 		run = false
 	}
 
-	ic := make(chan string)	// Input channel
-	nc := make(chan string)	// Net channel
+	ic := make(chan string) // Input channel
+	nc := make(chan string) // Net channel
 
 	r := bufio.NewReader(c)
 	w := bufio.NewWriter(c)
@@ -33,10 +34,10 @@ func main() {
 
 	for run {
 		select {
-		case str := <- nc:
+		case str := <-nc:
 			fmt.Println(str)
-		case str := <- ic:
-			if str=="quit" {
+		case str := <-ic:
+			if str == "quit" {
 				run = false
 				break
 			}
@@ -50,11 +51,11 @@ func localListen(ic chan string) {
 	r := bufio.NewReader(os.Stdin)
 	for {
 		str, err := r.ReadString('\n')
-		if err!= nil {
+		if err != nil {
 			fmt.Println("Error reading from console.")
 			continue
 		}
-		if str=="quit" {
+		if str == "quit" {
 			ic <- str
 			break
 		}
@@ -65,7 +66,7 @@ func localListen(ic chan string) {
 func netListen(nc chan string, r *bufio.Reader) {
 	for {
 		str, err := r.ReadString('\n')
-		if err!= nil {
+		if err != nil {
 			fmt.Println("Error reading from connection.")
 			break
 		}
