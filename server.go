@@ -14,9 +14,9 @@ type Client struct {
 }
 
 func main() {
-	a, _ := net.ResolveTCPAddr("TCP", ":8765")
+	a, _ := net.ResolveTCPAddr("tcp", ":8765")
 
-	l, _ := net.ListenTCP("TCP",a)
+	l, _ := net.ListenTCP("tcp",a)
 
 	var cl []*Client
 
@@ -38,6 +38,7 @@ func main() {
 				c.cw.WriteString(str)
 				c.cw.Flush()
 			}
+			fmt.Println(str)
 		}
 	}
 }
@@ -46,10 +47,11 @@ func joinListen(l *net.TCPListener, jc chan *net.TCPConn) {
 	for {
 		conn, err := l.AcceptTCP()
 		if err!=nil {
-			fmt.Println("Error accepting connection.")
+			fmt.Print("Error accepting connection.\r")
 			continue
 		}
 		jc <- conn
+		fmt.Println("New client joined.")
 	}
 }
 
@@ -57,8 +59,8 @@ func clientListen(c Client, cc chan string) {
 	for {
 		str, err := c.cr.ReadString('\n')
 		if err!= nil {
-			fmt.Println("Error reading from client.")
-			continue
+			fmt.Println("Error reading from client. Dropping client.")
+			break
 		}
 		cc <- str
 	}
