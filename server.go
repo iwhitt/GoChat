@@ -80,7 +80,8 @@ func inputListen(ic chan string) {
 			fmt.Println("Error reading from console.")
 			continue
 		}
-		str = strings.TrimRight(str,"\n")
+		str = strings.Trim(str, "\n")
+		str = strings.Trim(str, "\r")
 		fmt.Println(str)
 		if str=="quit" {
 			fmt.Println("QUIT")

@@ -17,7 +17,10 @@ func setup() (*net.TCPAddr, string) {
 	for {
 		fmt.Print("Input IP address: ")
 		str, _ := r.ReadString('\n')
-		str = strings.TrimRight(str, "\n")
+		fmt.Println(str)
+		str = strings.Trim(str, "\n")
+		str = strings.Trim(str, "\r")
+		fmt.Println(str)
 		addy := str + port
 		fmt.Println(addy)
 		var err error
