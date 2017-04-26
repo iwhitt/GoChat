@@ -5,17 +5,40 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"os/signal"
+	"strings"
 )
 
-func main() {
-	run := true
-
-	a, err := net.ResolveTCPAddr("tcp", "206.21.94.53:8765")
-	if err != nil {
-		fmt.Print(err, "\t")
-		fmt.Println("Error resolving address.")
-		run = false
+func setup() (*net.TCPAddr, string) {
+	var addr *net.TCPAddr
+	var uname string
+	port := ":8765"
+	r := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Print("Input IP address: ")
+		str, _ := r.ReadString('\n')
+		str = strings.TrimRight(str, "\n")
+		addy := str + port
+		fmt.Println(addy)
+		var err error
+		addr, err = net.ResolveTCPAddr("tcp", addy)
+		if err != nil {
+			fmt.Print(err, "\t")
+			fmt.Println("Error resolving address.")
+		} else {
+			fmt.Print("Input user name: ")
+			str, _ = r.ReadString('\n')
+			uname = strings.TrimRight(str, "\n")
+			break
+		}
 	}
+	return addr, uname
+}
+
+func main() {
+	a, username := setup()
+
+	run := true
 
 	c, err := net.DialTCP("tcp", nil, a)
 	if err != nil {
@@ -23,27 +46,37 @@ func main() {
 		run = false
 	}
 
-	ic := make(chan string) // Input channel
-	nc := make(chan string) // Net channel
+	ic := make(chan string)    // Input channel
+	nc := make(chan string)    // Net channel
+	sc := make(chan os.Signal) // Signal channel
 
 	r := bufio.NewReader(c)
 	w := bufio.NewWriter(c)
+	w.WriteString("0" + username)
+	w.Flush()
 
+	go interruptListen(sc)
 	go localListen(ic)
 	go netListen(nc, r)
 
 	for run {
 		select {
+		case _ = <-sc:
+			w.WriteString("2")
+			w.Flush()
+			return
 		case str := <-nc:
 			fmt.Println(str)
 		case str := <-ic:
-			if str == "quit" {
-				run = false
-				break
-			}
-			w.WriteString(str)
+			w.WriteString("1" + str)
 			w.Flush()
 		}
+	}
+}
+
+func interruptListen(ic chan os.Signal) {
+	for {
+		signal.Notify(ic, os.Interrupt)
 	}
 }
 
@@ -55,6 +88,7 @@ func localListen(ic chan string) {
 			fmt.Println("Error reading from console.")
 			continue
 		}
+		str = strings.TrimRight(str, "\n")
 		if str == "quit" {
 			ic <- str
 			break
