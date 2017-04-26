@@ -45,6 +45,7 @@ func main() {
 		select {
 		case cmd := <-ic:
 			if cmd=="quit" {
+				fmt.Println("Server quitting.")
 				return
 			}
 		case conn := <-jc:
@@ -59,6 +60,7 @@ func main() {
 				c.cw.WriteString(str)
 				c.cw.Flush()
 			}
+			str = strings.Trim(str, "\n")
 			fmt.Println(str)
 		case c := <- lc:
 			for i, tc := range cl {
@@ -80,11 +82,9 @@ func inputListen(ic chan string) {
 			fmt.Println("Error reading from console.")
 			continue
 		}
-		str = strings.Trim(str, "\n")
 		str = strings.Trim(str, "\r")
 		fmt.Println(str)
 		if str=="quit" {
-			fmt.Println("QUIT")
 			ic <- str
 			break
 		}
@@ -109,13 +109,15 @@ func clientListen(c Client, cc chan string, lc chan *Client) {
 	for {
 		str, err := c.cr.ReadString('\n')
 		if err!= nil {
-			fmt.Println("Error reading from client. Dropping client.")
+			fmt.Println("Error reading from client. Dropping client",c.name)
 			lc <- &c
 			break
 		}
 		tag := string(str[0])
 		mes := string(str[1:])
 		if tag=="0" {
+			mes = strings.Trim(mes, "\n")
+			fmt.Println(c.name,"is now",mes)
 			c.name = mes
 		} else if tag=="1" {
 			mes = c.name + ": " + mes

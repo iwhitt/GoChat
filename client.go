@@ -17,10 +17,8 @@ func setup() (*net.TCPAddr, string) {
 	for {
 		fmt.Print("Input IP address: ")
 		str, _ := r.ReadString('\n')
-		fmt.Println(str)
 		str = strings.Trim(str, "\n")
 		str = strings.Trim(str, "\r")
-		fmt.Println(str)
 		addy := str + port
 		fmt.Println(addy)
 		var err error
@@ -31,7 +29,7 @@ func setup() (*net.TCPAddr, string) {
 		} else {
 			fmt.Print("Input user name: ")
 			str, _ = r.ReadString('\n')
-			uname = strings.TrimRight(str, "\n")
+			uname = strings.Trim(str, "\r")
 			break
 		}
 	}
@@ -55,12 +53,13 @@ func main() {
 
 	r := bufio.NewReader(c)
 	w := bufio.NewWriter(c)
-	w.WriteString("0" + username)
-	w.Flush()
 
-	go interruptListen(sc)
+	//go interruptListen(sc)
 	go localListen(ic)
 	go netListen(nc, r)
+
+	w.WriteString("0" + username)
+	w.Flush()
 
 	for run {
 		select {
@@ -69,11 +68,15 @@ func main() {
 			w.Flush()
 			return
 		case str := <-nc:
+			str = strings.Trim(str, "\n")
 			fmt.Println(str)
 		case str := <-ic:
+			if str=="quit" {
+				fmt.Println("Quitting.")
+				return
+			}
 			w.WriteString("1" + str)
 			w.Flush()
-			fmt.Println("?")
 		}
 	}
 }
@@ -92,7 +95,7 @@ func localListen(ic chan string) {
 			fmt.Println("Error reading from console.")
 			continue
 		}
-		str = strings.TrimRight(str, "\n")
+		str = strings.Trim(str, "\r")
 		if str == "quit" {
 			ic <- str
 			break
