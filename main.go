@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime"
+	"strings"
 )
 
 func main() {
@@ -18,4 +20,14 @@ func main() {
 		fmt.Println("argument 1 was not \"s\" or \"c\"... exiting.")
 	}
 
+}
+
+// SanitizeString cleans input so it can be safely written to connection.
+func SanitizeString(input string) string {
+	result := input
+	if runtime.GOOS == "windows" {
+		result = strings.TrimRight(input, "\r\n")
+		result = result + "\n"
+	}
+	return result
 }
