@@ -13,30 +13,30 @@ func setup() (*net.TCPAddr, string) {
 	var addr *net.TCPAddr
 	var uname string
 
-	//r := bufio.NewReader(os.Stdin)
-	// port := ":8765"
-	// for {
-	// 	fmt.Print("Input IP address: ")
-	// 	str, _ := r.ReadString('\n')
-	// 	str = strings.Trim(str, "\n")
-	// 	str = strings.Trim(str, "\r")
-	// 	addy := str + port
-	// 	fmt.Println(addy)
-	uname = "Default"
-	addy := "127.0.0.1:8765"
-	var err error
-	addr, err = net.ResolveTCPAddr("tcp", addy)
-	if err != nil {
-		fmt.Print(err, "\t")
-		fmt.Println("Error resolving address.")
+	r := bufio.NewReader(os.Stdin)
+	port := ":8765"
+	for {
+		fmt.Print("Input IP address: ")
+		str, _ := r.ReadString('\n')
+		str = strings.Trim(str, "\n")
+		str = strings.Trim(str, "\r")
+		addy := str + port
+		fmt.Println(addy)
+		uname = "Default"
+		// addy := "127.0.0.1:8765"
+		var err error
+		addr, err = net.ResolveTCPAddr("tcp", addy)
+		if err != nil {
+			fmt.Print(err, "\t")
+			fmt.Println("Error resolving address.")
 
-	} // else {
-	// 	fmt.Print("Input user name: ")
-	// 	str, _ = r.ReadString('\n')
-	// 	uname = strings.Trim(str, "\r")
-	// 	break
-	// }
-	//}
+		} else {
+			fmt.Print("Input user name: ")
+			str, _ = r.ReadString('\n')
+			uname = strings.Trim(str, "\r")
+			break
+		}
+	}
 	return addr, uname
 }
 
