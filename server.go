@@ -22,6 +22,8 @@ type message struct {
 	message string
 }
 
+var rooms []int
+
 func RunServer() {
 	run := true
 
@@ -46,7 +48,7 @@ func RunServer() {
 
 	go inputListen(ic)
 	go joinListen(l, jc)
-	var rooms []int
+
 	for run {
 		select {
 		case cmd := <-ic:
@@ -60,7 +62,6 @@ func RunServer() {
 				if rooms[i] < 2 {
 					cliRoomID = i
 					rooms[i]++
-					fmt.Println("room", i, "now has", rooms[i], "chatters.")
 					break
 				}
 			}
@@ -68,6 +69,7 @@ func RunServer() {
 				rooms = append(rooms, 1)
 				cliRoomID = len(rooms) - 1
 			}
+			fmt.Println("new client going to room", cliRoomID)
 			c := Client{conn,
 				bufio.NewReader(conn),
 				bufio.NewWriter(conn),
@@ -86,6 +88,9 @@ func RunServer() {
 		case c := <-lc:
 			for i, tc := range cl {
 				if c == tc {
+					fmt.Println(rooms[tc.room])
+					rooms[tc.room]--
+					fmt.Println(rooms[tc.room])
 					cl = append(cl[:i], cl[i+1:]...)
 					fmt.Println("Client removed.")
 				}
@@ -130,6 +135,7 @@ func clientListen(c Client, cc chan message, lc chan *Client) {
 	for {
 		str, err := c.cr.ReadString('\n')
 		if err != nil {
+			rooms[c.room]--
 			fmt.Println("Error reading from client. Dropping client", c.name)
 			lc <- &c
 			break
